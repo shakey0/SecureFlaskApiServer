@@ -10,4 +10,3 @@ updates:
       - "python"
     allow:
       - dependency-type: "all"
-    vulnerability-alerts: true
