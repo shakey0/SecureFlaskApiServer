@@ -9,6 +9,8 @@ flask-cors = "*"
 flask-wtf = "*"
 flask-talisman = "*"
 flask-limiter = "*"
+python-dotenv = "*"
+redis = "*"
 
 [dev-packages]
 

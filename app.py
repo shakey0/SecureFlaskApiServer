@@ -5,10 +5,14 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'replace-with-a-very-strong-secret-key'
+
+environ = os.environ.get('FLASK_ENV', 'production')
 
 # COOKIE SETTINGS - After making a response: response = make_response(jsonify({})), set the cookie like this:
 # response.set_cookie(
@@ -34,12 +38,11 @@ csp = {
     'connect-src': ["'self'"],
     'object-src': ["'none'"]
 }
-
 Talisman(
     app,
     content_security_policy=csp,
     frame_options='DENY',
-    force_https=True,
+    force_https=environ not in ['development', 'test'],
     strict_transport_security=True, # HSTS
     strict_transport_security_preload=True,
     session_cookie_secure=True,
@@ -53,10 +56,11 @@ CORS(app,
      allow_headers=['Content-Type', 'X-CSRFToken', 'Authorization'])
 
 limiter = Limiter(
-    app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="redis://localhost:6379/0"
 )
+limiter.init_app(app)
 
 @app.before_request
 def validate_content_type():
@@ -94,5 +98,4 @@ def submit_data():
     return jsonify({"status": "success", "received": data})
 
 if __name__ == '__main__':
-    environ = os.environ.get('FLASK_ENV', 'production')
     app.run(host='0.0.0.0', port=5000, debug=environ == 'development')
